@@ -1,0 +1,62 @@
+## Macro title: Old Pages
+## Macro has a body: Y or N (N)
+## Body processing: Selected body processing option
+## Output: Selected output option
+##
+## Developed by: Andrew Frayling
+## Date created: 05/02/2012
+## Installed by: <your name>
+
+## Macro to display pages that have not been updated for x days
+## @param numdays:title=Number of Days|type=int|desc=Enter number of days to compare|required=true|multiple=false|default=7
+
+#set ( $allPagesInSpace = $pageManager.getPages($space, true) )
+
+## default value handler, set default to 7 days
+#set ( $numdays = $paramnumdays )
+#if(!$numdays)
+#set ( $numdays = "7" )
+#else
+#set ( $numdays = $paramnumdays )
+#end
+
+## cast the number of days to an Integer
+#set ( $Integer = 0 )
+#set ( $intnumdays = $Integer.parseInt($numdays) )
+
+## negative sign the number of days
+#set ( $negativeDays = (-1 * $intnumdays) )
+
+## get a calendar object so we can calculate the
+## date we wish to compare with the page modification date
+## e.g. $compareDate.add(6, -7) for pages modified over a week ago
+#set ( $compareDate = $action.dateFormatter.getCalendar() )
+$compareDate.setTime($content.getCurrentDate())
+$compareDate.add(6, $negativeDays)
+
+<p>Pages last updated before <strong>$action.dateFormatter.format($compareDate.getTime())</strong></p>
+
+<table>
+<tr>
+<th>Page</th><th>Last Updated Date</th><th>Updated By</th>
+</tr>
+
+## loop through all the pages in the current space
+#foreach($page in $allPagesInSpace)
+
+## get a calendar object and for each page in space set it to last modification date
+#set ($pagedate = $action.dateFormatter.getCalendar())
+$pagedate.setTime($page.getLastModificationDate())
+
+## only display pages last modified before the compare date
+#if ($pagedate.before($compareDate))
+<tr>
+<td>#contentLink2($page true false)</td>
+<td>$action.dateFormatter.format($page.getLastModificationDate())</td>
+<td>#usernameLink($page.lastModifierName)</td>
+</tr>
+#end
+#end
+## end looping through pages in the current space
+
+</table>
